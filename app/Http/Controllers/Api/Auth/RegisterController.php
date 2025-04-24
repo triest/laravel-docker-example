@@ -16,43 +16,46 @@ class RegisterController extends Controller
 {
     public function register(RegisterRequest $request)
     {
+        $validated = $request->validated();
 
-            $validated = $request->validated();
+        if (User::query()->where('phone', $validated['phone'])->orWhere('email', $validated['email'])->exists()) {
+            throw new Exception("Пользователь уже существует", 422);
+        }
 
-            if(User::query()->where('phone',$validated['phone'])->orWhere('email',$validated['email'])->exists()){
-                throw new Exception("Пользователь уже существует" ,422);
-            }
+        $user = new User();
 
-            $user = new User();
+        $user->email = $validated['email'];
+        $user->phone = $validated['phone'];
+        $user->password = Hash::make($validated['password']);
+        $user->save();
 
-            $user->email = $validated['email'];
-            $user->phone = $validated['phone'];
-            $user->password =  Hash::make($validated['password']);
-            $user->save();
-
-            return response()->json($user);
+        return response()->json($user);
     }
 
     public function login(LoginRequest $request)
     {
-
-        $user = User::query()->orderBy('id','desc')->where('email',$request['email'])->first();
+        $user = User::query()->orderBy('id', 'desc')->where('email', $request['email'])->first();
 
         $user = $user->first();
 
-        if (!$user)
-            throw new Exception("Пользователь с " . (!empty($request->email) ? 'email ' . $request->email : 'номером телефона ' . $request->phone) . " не найден", 422);
+        if (!$user) {
+            throw new Exception(
+                "Пользователь с " . (!empty($request->email) ? 'email ' . $request->email : 'номером телефона ' . $request->phone) . " не найден",
+                422
+            );
+        }
 
         //auth attempt
         $auth = Auth::attempt(['id' => $user->id, 'password' => $request->password]);
 
-        if (!$auth)
+        if (!$auth) {
             throw new Exception("Неверный логин или пароль", 401);
+        }
 
         $user = Auth::user();
 
 
-        $token =  $user->createToken('token-name', ['server:update'])->plainTextToken;;
+        $token = $user->createToken('token-name', ['server:update'])->plainTextToken;;
 
         $resultMessage = 'Успешно авторизован';
 
@@ -62,11 +65,10 @@ class RegisterController extends Controller
                 'token' => $token,
             ]
         );
-
     }
 
     public function logout(Request $request)
     {
-        return response()->json(["result"=>$request->user()->currentAccessToken()->delete()]);
+        return response()->json(["result" => $request->user()->currentAccessToken()->delete()]);
     }
 }
