@@ -2,7 +2,8 @@
      Do not edit it: it is likely to be discarded and generated again before it's read next time.
      Files used to generate this file:
        /etc/clickhouse-server/config.xml
-       /etc/clickhouse-server/config.d/docker_related_config.xml      -->
+       /etc/clickhouse-server/config.d/docker_related_config.xml
+       /etc/clickhouse-server/config.d/logging.xml      -->
 
 <!--
   NOTE: User and query level settings are set up in "users.xml" file.
@@ -26,7 +27,7 @@
 
             [1]: https://github.com/pocoproject/poco/blob/poco-1.9.4-release/Foundation/include/Poco/Logger.h#L105-L114
         -->
-        <level>trace</level>
+        <level>warning</level>
         <log>/var/log/clickhouse-server/clickhouse-server.log</log>
         <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
         <!-- Rotation policy
@@ -72,6 +73,9 @@
         To enable JSON logging support, just uncomment <formatting> tag below.
         -->
         <!-- <formatting>json</formatting> -->
+    
+        
+        <console>true</console>
     </logger>
 
     <!-- Add headers to response in options request. OPTIONS method is used in CORS preflight requests. -->
@@ -990,58 +994,15 @@
     -->
 
     <!-- Query log. Used only for queries with setting log_queries = 1. -->
-    <query_log>
-        <!-- What table to insert data. If table is not exist, it will be created.
-             When query log structure is changed after system update,
-              then old table will be renamed and new table will be created automatically.
-        -->
-        <database>system</database>
-        <table>query_log</table>
-        <!--
-            PARTITION BY expr: https://clickhouse.com/docs/en/table_engines/mergetree-family/custom_partitioning_key/
-            Example:
-                event_date
-                toMonday(event_date)
-                toYYYYMM(event_date)
-                toStartOfHour(event_time)
-        -->
-        <partition_by>toYYYYMM(event_date)</partition_by>
-        <!--
-            Table TTL specification: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/mergetree/#mergetree-table-ttl
-            Example:
-                event_date + INTERVAL 1 WEEK
-                event_date + INTERVAL 7 DAY DELETE
-                event_date + INTERVAL 2 WEEK TO DISK 'bbb'
-
-        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>
-        -->
-
-        <!-- Instead of partition_by, you can provide full engine expression (starting with ENGINE = ) with parameters,
-             Example: <engine>ENGINE = MergeTree PARTITION BY toYYYYMM(event_date) ORDER BY (event_date, event_time) SETTINGS index_granularity = 1024</engine>
-          -->
-
-        <!-- Interval of flushing data. -->
-        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
-    </query_log>
+    
 
     <!-- Trace log. Stores stack traces collected by query profilers.
          See query_profiler_real_time_period_ns and query_profiler_cpu_time_period_ns settings. -->
-    <trace_log>
-        <database>system</database>
-        <table>trace_log</table>
-
-        <partition_by>toYYYYMM(event_date)</partition_by>
-        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
-    </trace_log>
+    
 
     <!-- Query thread log. Has information about all threads participated in query execution.
          Used only for queries with setting log_query_threads = 1. -->
-    <query_thread_log>
-        <database>system</database>
-        <table>query_thread_log</table>
-        <partition_by>toYYYYMM(event_date)</partition_by>
-        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
-    </query_thread_log>
+    
 
     <!-- Query views log. Has information about all dependent views associated with a query.
          Used only for queries with setting log_query_views = 1. -->
@@ -1073,26 +1034,13 @@
     -->
 
     <!-- Metric log contains rows with current values of ProfileEvents, CurrentMetrics collected with "collect_interval_milliseconds" interval. -->
-    <metric_log>
-        <database>system</database>
-        <table>metric_log</table>
-        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
-        <collect_interval_milliseconds>1000</collect_interval_milliseconds>
-    </metric_log>
+    
 
     <!--
         Asynchronous metric log contains values of metrics from
         system.asynchronous_metrics.
     -->
-    <asynchronous_metric_log>
-        <database>system</database>
-        <table>asynchronous_metric_log</table>
-        <!--
-            Asynchronous metrics are updated once a minute, so there is
-            no need to flush more often.
-        -->
-        <flush_interval_milliseconds>7000</flush_interval_milliseconds>
-    </asynchronous_metric_log>
+    
 
     <!--
         OpenTelemetry log contains OpenTelemetry trace spans.
@@ -1420,4 +1368,14 @@
         <console>1</console>
     </logger>
     -->
+
+    
+
+    <!-- Stop all the unnecessary logging -->
+    
+    
+    
+    
+    
+    
 </clickhouse>
